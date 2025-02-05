@@ -6,11 +6,12 @@
 /*   By: mhermini <mhermini@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/01 23:09:34 by mhermini          #+#    #+#             */
-/*   Updated: 2025/02/05 00:22:18 by mhermini         ###   ########.fr       */
+/*   Updated: 2025/02/05 03:40:30 by mhermini         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
+#include <stdio.h>
 
 size_t	ft_strlen(const char *s)
 {
@@ -22,85 +23,85 @@ size_t	ft_strlen(const char *s)
 	return (str - s);
 }
 
-char	*free_buffer(char **buffer, char **read_buf)
+char	*free_buffer(char **buffer_stored, char **chuck)
 {
-	if (buffer)
+	if (buffer_stored)
 	{
-		free(*buffer);
-		*buffer = NULL;
+		free(*buffer_stored);
+		*buffer_stored = NULL;
 	}
-	if (read_buf)
+	if (chuck)
 	{
-		free(*read_buf);
-		*read_buf = NULL;
+		free(*chuck);
+		*chuck = NULL;
 	}
 	return (NULL);
 }
 
-char	*extract_line(char **buffer)
+char	*extract_line(char **buffer_stored)
 {
-	char	*newline;
-	char	*line;
-	char	*new_buffer;
-	size_t	len;
+	char	*newline_position;
+	char	*extracted_line;
+	char	*remaining_buffer;
+	size_t	line_length;
 
-	if (!buffer || !(*buffer))
+	if (!buffer_stored || !(*buffer_stored))
 		return (NULL);
-	newline = ft_strchr(*buffer, '\n');
-	if (newline)
+	newline_position = ft_strchr(*buffer_stored, '\n');
+	if (newline_position)
 	{
-		len = newline - *buffer + 1;
-		line = ft_substr(*buffer, 0, len);
-		new_buffer = ft_strdup(newline + 1);
+		line_length = newline_position - *buffer_stored + 1;
+		extracted_line = ft_substr(*buffer_stored, 0, line_length);
+		remaining_buffer = ft_strdup(newline_position + 1);
 	}
 	else
 	{
-		line = ft_strdup(*buffer);
-		new_buffer = NULL;
+		extracted_line = ft_strdup(*buffer_stored);
+		remaining_buffer = NULL;
 	}
-	free_buffer(buffer, NULL);
-	*buffer = new_buffer;
-	return (line);
+	free_buffer(buffer_stored, NULL);
+	*buffer_stored = remaining_buffer;
+	return (extracted_line);
 }
 
-char	*read_and_store(int fd, char *stored_buffer)
+char	*handle_store(int fd, char *buffer_stored)
 {
-	char	*new_buffer;
-	char	*read_buffer;
+	char	*merged_buffer;
+	char	*chuck;
 	ssize_t	bytes_read;
 
 	bytes_read = 1;
-	if (!stored_buffer)
-		stored_buffer = ft_calloc(1, sizeof(char));
-	read_buffer = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
-	while (!ft_strchr(stored_buffer, '\n') && bytes_read != 0)
+	if (!buffer_stored)
+		buffer_stored = ft_calloc(1, sizeof(char));
+	chuck = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
+	while (!(ft_strchr(buffer_stored, '\n') || bytes_read == 0))
 	{
-		bytes_read = read(fd, read_buffer, BUFFER_SIZE);
+		bytes_read = read(fd, chuck, BUFFER_SIZE);
 		if (bytes_read == -1)
-			return (free_buffer(&stored_buffer, &read_buffer));
-		read_buffer[bytes_read] = '\0';
-		new_buffer = ft_strjoin(stored_buffer, read_buffer);
-		free_buffer(&stored_buffer, NULL);
-		stored_buffer = new_buffer;
+			return (free_buffer(&buffer_stored, &chuck));
+		chuck[bytes_read] = '\0';
+		merged_buffer = ft_strjoin(buffer_stored, chuck);
+		free_buffer(&buffer_stored, NULL);
+		buffer_stored = merged_buffer;
 	}
-	free_buffer(&read_buffer, NULL);
-	if ((*stored_buffer == '\0' || !stored_buffer) && bytes_read == 0)
-		return (free_buffer(&stored_buffer, NULL));
-	return (stored_buffer);
+	free_buffer(NULL, &chuck);
+	if ((*buffer_stored == '\0' || !buffer_stored) && bytes_read == 0)
+		free_buffer(&buffer_stored, NULL);
+	return (buffer_stored);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	*buffer;
-	char		*line;
+	static char	*buffer_stored;
+	char		*current_line;
 
 	if (fd == -1 || BUFFER_SIZE < 1)
 		return (NULL);
-	buffer = read_and_store(fd, buffer);
-	if (!buffer)
+	buffer_stored = handle_store(fd, buffer_stored);
+	if (!buffer_stored)
 		return (NULL);
-	line = extract_line(&buffer);
-	if (!line)
-		return (free_buffer(&buffer, NULL));
-	return (line);
+	current_line = extract_line(&buffer_stored);
+	if (!current_line)
+		return (free_buffer(&buffer_stored, NULL));
+	return (current_line);
 }
