@@ -6,12 +6,11 @@
 /*   By: mhermini <mhermini@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/01 23:09:34 by mhermini          #+#    #+#             */
-/*   Updated: 2025/02/05 03:40:30 by mhermini         ###   ########.fr       */
+/*   Updated: 2025/02/06 05:20:59 by mhermini         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
-#include <stdio.h>
 
 size_t	ft_strlen(const char *s)
 {
@@ -23,36 +22,36 @@ size_t	ft_strlen(const char *s)
 	return (str - s);
 }
 
-char	*free_buffer(char **buffer_stored, char **chuck)
+static *free_buffer(char **buffer_stored, char **chunck)
 {
 	if (buffer_stored)
 	{
 		free(*buffer_stored);
 		*buffer_stored = NULL;
 	}
-	if (chuck)
+	if (chunck)
 	{
-		free(*chuck);
-		*chuck = NULL;
+		free(*chunck);
+		*chunck = NULL;
 	}
 	return (NULL);
 }
 
-char	*extract_line(char **buffer_stored)
+static char	*extract_line(char **buffer_stored)
 {
-	char	*newline_position;
+	char	*ptr_newline_position;
 	char	*extracted_line;
 	char	*remaining_buffer;
 	size_t	line_length;
 
 	if (!buffer_stored || !(*buffer_stored))
 		return (NULL);
-	newline_position = ft_strchr(*buffer_stored, '\n');
-	if (newline_position)
+	ptr_newline_position = ft_strchr(*buffer_stored, '\n');
+	if (ptr_newline_position)
 	{
-		line_length = newline_position - *buffer_stored + 1;
+		line_length = ptr_newline_position - *buffer_stored + 1;
 		extracted_line = ft_substr(*buffer_stored, 0, line_length);
-		remaining_buffer = ft_strdup(newline_position + 1);
+		remaining_buffer = ft_strdup(ptr_newline_position + 1);
 	}
 	else
 	{
@@ -64,27 +63,27 @@ char	*extract_line(char **buffer_stored)
 	return (extracted_line);
 }
 
-char	*handle_store(int fd, char *buffer_stored)
+static char	*handle_store(int fd, char *buffer_stored)
 {
 	char	*merged_buffer;
-	char	*chuck;
+	char	*chunck;
 	ssize_t	bytes_read;
 
 	bytes_read = 1;
 	if (!buffer_stored)
 		buffer_stored = ft_calloc(1, sizeof(char));
-	chuck = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
+	chunck = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
 	while (!(ft_strchr(buffer_stored, '\n') || bytes_read == 0))
 	{
-		bytes_read = read(fd, chuck, BUFFER_SIZE);
+		bytes_read = read(fd, chunck, BUFFER_SIZE);
 		if (bytes_read == -1)
-			return (free_buffer(&buffer_stored, &chuck));
-		chuck[bytes_read] = '\0';
-		merged_buffer = ft_strjoin(buffer_stored, chuck);
+			return (free_buffer(&buffer_stored, &chunck));
+		chunck[bytes_read] = '\0';
+		merged_buffer = ft_strjoin(buffer_stored, chunck);
 		free_buffer(&buffer_stored, NULL);
 		buffer_stored = merged_buffer;
 	}
-	free_buffer(NULL, &chuck);
+	free_buffer(NULL, &chunck);
 	if ((*buffer_stored == '\0' || !buffer_stored) && bytes_read == 0)
 		free_buffer(&buffer_stored, NULL);
 	return (buffer_stored);

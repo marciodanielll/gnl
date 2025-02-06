@@ -6,7 +6,7 @@
 /*   By: mhermini <mhermini@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/01 23:13:15 by mhermini          #+#    #+#             */
-/*   Updated: 2025/02/05 01:50:54 by mhermini         ###   ########.fr       */
+/*   Updated: 2025/02/05 20:16:11 by mhermini         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,7 +112,7 @@ char	*ft_strchr(const char *s, int c)
 	if (c == '\0')
 		return ((char *)&s[length]);
 	index = 0;
-	while (s[index] != '\0')
+	while (s[index])
 	{
 		if (s[index] == (unsigned char)c)
 			return ((char *)&s[index]);
